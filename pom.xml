@@ -25,6 +25,7 @@
         <typesafe-config.version>1.4.3</typesafe-config.version>
         <h2.version>2.3.232</h2.version>
         <commons-rng.version>1.6</commons-rng.version>
+        <jackson.version>3.0.3</jackson.version>
     </properties>
 
     <dependencies>
@@ -87,6 +88,13 @@
             <artifactId>annotations</artifactId>
             <version>26.0.2-1</version>
             <scope>compile</scope>
+        </dependency>
+
+        <!-- Jackson -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
     </dependencies>
 

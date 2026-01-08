@@ -5,7 +5,8 @@
 
 ## 1. Обзор
 
-**mz4d** - игра для телеграм-бота. Пользователь ходит по лабиринту (двумерному, трехмерному и четырехмерному), выполняет задание. Особенностью игры является то, что лабиринт не показывается, пользователь его держит "в памяти"
+**mz4d** - игра для телеграм-бота. Пользователь ходит по лабиринту (двумерному, трехмерному и четырехмерному), выполняет
+задание. Особенностью игры является то, что лабиринт не показывается, пользователь его держит "в памяти"
 
 ## 2. Принятые решения
 
@@ -14,6 +15,7 @@
 Вот плюсы/минусы:
 
 **Вариант 1: Один Connection, Session per virtual thread (актор)**
+
 ```
 ✅ Легковесно - Connection тяжелый объект, Session относительно легкий
 ✅ Отлично дружит с virtual threads - каждый поток свой Session
@@ -22,13 +24,15 @@
 ```
 
 **Вариант 2: Connection per actor pool**
+
 ```
 ✅ Полная изоляция между пулами
 ❌ Overhead - каждый Connection держит сетевые ресурсы (но у тебя embedded, так что не критично)
 ❌ Сложнее lifecycle management
 ```
 
-**Решение** **Один Connection на приложение, Session per virtual thread**. Embedded Artemis через `vm://` - там нет реальной сети, так что Connection совсем легкий. А Session'ов можно сколько угодно нарожать в виртуальных потоках.
+**Решение** **Один Connection на приложение, Session per virtual thread**. Embedded Artemis через `vm://` - там нет
+реальной сети, так что Connection совсем легкий. А Session'ов можно сколько угодно нарожать в виртуальных потоках.
 
 ```java
 // При старте
@@ -44,6 +48,7 @@ MessageConsumer consumer = session.createConsumer(queue);
 ### По сериализации
 
 **Jackson вместо Gson/Kryo:**
+
 ```
 ✅ Records из коробки (с Java 16+)
 ✅ JSON читаемый (в отличие от Kryo binary)
@@ -53,20 +58,21 @@ MessageConsumer consumer = session.createConsumer(queue);
 ```
 
 Пример:
+
 ```java
-ObjectMapper mapper = new ObjectMapper()
-    .registerModule(new Jdk8Module())
-    .setSerializationInclusion(JsonInclude.Include.NON_NULL); // или ALWAYS
+ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module()).setSerializationInclusion(JsonInclude.Include.NON_NULL); // или ALWAYS
 ```
 
 ### По ungraceful shutdown
 
 **Artemis с persistence выдержит ungraceful shutdown!** При рестарте:
+
 1. Читает journal с диска
 2. Восстанавливает все неподтвержденные сообщения в очереди
 3. Акторы подключатся и продолжат обработку
 
-Единственное **НО**: сообщение может обработаться дважды, если актор упал между обработкой и ACK. Поэтому и нужна идемпотентность (дедупликация через traceId - как раз для этого).
+Единственное **НО**: сообщение может обработаться дважды, если актор упал между обработкой и ACK. Поэтому и нужна
+идемпотентность (дедупликация через traceId - как раз для этого).
 
 ## Архитектура простого каркаса
 
@@ -154,36 +160,99 @@ ObjectMapper mapper = new ObjectMapper()
 
 Путь к `config/application.conf` захардкожен
 
+### Структура пакетов
+
+```
+io.github.manjago.mz4d/
+├── cli/               - CLI команды
+├── config/            - Конфигурация
+├── persistence/       - MVStore, репозитории
+│   ├── mvstore        - реализация на MVStore
+│   └── repository/    - IncomingMessageRepository, etc
+├── domain/            - Доменные модели
+│   └── message/       - IncomingMessage, DomainMessage, etc
+├── actor/             - Акторы
+│   ├── incoming/
+│   ├── engine/
+│   └── outgoing/
+├── messaging/         - Artemis, очереди
+├── exceptions/        - исключения
+└── Mz4dEngine         - Главный движок
+```
+
+### Ключевые классы
+
+#### config (конфигурация)
+
+| Класс        | Ответственность                                |
+|--------------|------------------------------------------------|
+| `Mz4dConfig` | Конфигурация (HOCON, можно дополнить из файла) |
+
+#### cli (командная строка)
+
+| Класс     | Ответственность               |
+|-----------|-------------------------------|
+| `MazeCli` | Главная точка входа (picocli) |
+
+#### mvstore (реализация сохранения на MvStore)
+
+| Класс            | Ответственность   |
+|------------------|-------------------|
+| `MvStoreManager` | Хранитель MVStore |
+
+#### repository (сохранение)
+
+| Класс                       | Ответственность              |
+|-----------------------------|------------------------------|
+| `IncomingMessageRepository` | Сохранение `IncomingMessage` |
+
+#### exceptions (исключения)
+
+| Класс                | Ответственность                                  |
+|----------------------|--------------------------------------------------|
+| `Mz4dPanicException` | Исключение, при котором останавливаем выполнение |
+
+#### Основной движок
+
+| Класс        | Ответственность |
+|--------------|-----------------|
+| `Mz4dEngine` | Основной движок |
+
 ## План
 
-
 **Шаг 1: MVStore wrapper** (без Artemis пока)
+
 - [ ] Класс `MvStoreManager` - открывает/закрывает store
 - [ ] Репозитории: `IncomingMessageRepository`, `DomainMessageRepository`, etc
 - [ ] Сериализация через Jackson
 - [ ] Простой тест: сохранили/достали сообщение
 
 **Шаг 2: Artemis bootstrap** (без акторов пока)
+
 - [ ] Конфигурация: 3 очереди
 - [ ] Persistence в директорию
 - [ ] Простой тест: положили в очередь - достали
 
 **Шаг 3: Один актор** (например, IncomingActor)
+
 - [ ] Virtual thread читает из очереди
 - [ ] Достает из MVStore
 - [ ] Кладет в следующую очередь
 - [ ] Логирует traceId
 
 **Шаг 4: Console interface**
+
 - [ ] Читаем stdin
 - [ ] Кладем в MVStore + Artemis
 - [ ] Ждем ответа из outbox
 - [ ] Выводим в stdout
 
 **Шаг 5: Полная цепочка**
+
 - [ ] Все акторы
 - [ ] End-to-end тест: ввели "Hello" → получили "5 symbols"
 
 **Шаг 6: Telegram interface**
+
 - [ ] Long polling
 - [ ] Подключаем к существующей цепочке

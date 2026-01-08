@@ -1,7 +1,7 @@
 package io.github.manjago.mz4d;
 
 import io.github.manjago.mz4d.config.Mz4dConfig;
-import io.github.manjago.mz4d.persistence.MvStoreManager;
+import io.github.manjago.mz4d.persistence.mvstore.MvStoreManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +37,8 @@ public class Mz4dEngine {
         }));
 
         final Mz4dConfig mz4dConfig = Mz4dConfig.defaults();
-        mvStoreManager = new MvStoreManager(mz4dConfig.mvstorePath(), mz4dConfig.mvstoreFileName());
+        mvStoreManager = new MvStoreManager(mz4dConfig.mvstorePath(), mz4dConfig.mvstoreFileName()).init();
+        log.info("Initializing MVStore at: {}", mz4dConfig.mvstorePath());
 
         return true;
     }
