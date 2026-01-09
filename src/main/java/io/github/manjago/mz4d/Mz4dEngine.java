@@ -1,7 +1,7 @@
 package io.github.manjago.mz4d;
 
 import io.github.manjago.mz4d.config.Mz4dConfig;
-import io.github.manjago.mz4d.persistence.mvstore.MvStoreManager;
+import io.github.manjago.mz4d.persistence.MvStoreManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

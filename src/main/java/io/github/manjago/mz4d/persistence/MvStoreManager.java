@@ -1,4 +1,4 @@
-package io.github.manjago.mz4d.persistence.mvstore;
+package io.github.manjago.mz4d.persistence;
 
 import io.github.manjago.mz4d.exceptions.Mz4dPanicException;
 import org.h2.mvstore.MVStore;

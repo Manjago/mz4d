@@ -167,7 +167,7 @@ io.github.manjago.mz4d/
 ├── cli/               - CLI команды
 ├── config/            - Конфигурация
 ├── persistence/       - MVStore, репозитории
-│   ├── mvstore        - реализация на MVStore
+│   ├── MVStoreManager - работа с MVStore, транзакции
 │   └── repository/    - IncomingMessageRepository, etc
 ├── domain/            - Доменные модели
 │   └── message/       - IncomingMessage, DomainMessage, etc
