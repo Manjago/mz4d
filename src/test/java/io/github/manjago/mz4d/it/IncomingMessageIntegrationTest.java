@@ -7,6 +7,7 @@ import io.github.manjago.mz4d.persistence.repository.IncomingMessageRepository;
 import io.github.manjago.mz4d.persistence.serialization.JsonDataSerializer;
 import org.h2.mvstore.tx.Transaction;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -19,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class IncomingMessageIntegrationTest {
 
     @Test
-    void storeAndLoad() {
+    void storeAndLoad(@TempDir Path tempDir) {
 
-        try (MvStoreManager mvStoreManager = new MvStoreManager(Path.of("target"), "test.mv")) {
+        try (MvStoreManager mvStoreManager = new MvStoreManager(tempDir, "test.mv")) {
 
             //given
 
