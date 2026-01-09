@@ -195,17 +195,26 @@ io.github.manjago.mz4d/
 |-----------|-------------------------------|
 | `MazeCli` | Главная точка входа (picocli) |
 
-#### mvstore (реализация сохранения на MvStore)
+#### persistence (реализация сохранения на MvStore)
 
 | Класс            | Ответственность   |
 |------------------|-------------------|
 | `MvStoreManager` | Хранитель MVStore |
 
-#### repository (сохранение)
+#### domain.message (данные домена)
+
+| Класс             | Ответственность                                   |
+|-------------------|---------------------------------------------------|
+| `ReceivedMessage` | Получено от внешнего источника (Telegram/Console) |
+| `GameCommand`     | Команда для игрового движка                       |
+| `GameResponse`    | Ответ от игрового движка                          |
+| `OutgoingMessage` | готово к отправке наружу                          |
+
+#### persistence.repository (сохранение)
 
 | Класс                       | Ответственность              |
 |-----------------------------|------------------------------|
-| `IncomingMessageRepository` | Сохранение `IncomingMessage` |
+| `ReceivedMessageRepository` | Сохранение `ReceivedMessage` |
 
 #### exceptions (исключения)
 
@@ -226,7 +235,7 @@ io.github.manjago.mz4d/
 - [x] Класс `MvStoreManager` - открывает/закрывает store
 - [ ] Репозитории: `IncomingMessageRepository`, `DomainMessageRepository`, etc
 - [x] Сериализация через Jackson
-- [ ] Простой тест: сохранили/достали сообщение
+- [x] Простой тест: сохранили/достали сообщение
 
 **Шаг 2: Artemis bootstrap** (без акторов пока)
 
