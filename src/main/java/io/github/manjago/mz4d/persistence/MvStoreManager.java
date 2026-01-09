@@ -34,9 +34,9 @@ public class MvStoreManager implements AutoCloseable {
 
         // 1. Открываем сырой store
         store = new MVStore.Builder().fileName(fullPath.toString()).compress()
-                // autoCommitBufferSize сбрасывает данные на диск в фоне,
-                // чтобы файл не рос бесконечно в памяти
-                .autoCommitBufferSize(1024) // не вижу смысла давать пользователю кастомизировать
+                // autoCommitBufferSize (в КБ) сбрасывает данные на диск в фоне,
+                // чтобы буфер записи не рос бесконечно
+                .autoCommitBufferSize(1024) // // 1024 KB = 1 MB буфер (не вижу смысла выносить в конфиг)
                 .open();
 
         // 2. Инициализируем слой транзакций поверх него
