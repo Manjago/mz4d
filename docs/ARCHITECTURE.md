@@ -223,9 +223,9 @@ io.github.manjago.mz4d/
 
 **Шаг 1: MVStore wrapper** (без Artemis пока)
 
-- [ ] Класс `MvStoreManager` - открывает/закрывает store
+- [x] Класс `MvStoreManager` - открывает/закрывает store
 - [ ] Репозитории: `IncomingMessageRepository`, `DomainMessageRepository`, etc
-- [ ] Сериализация через Jackson
+- [x] Сериализация через Jackson
 - [ ] Простой тест: сохранили/достали сообщение
 
 **Шаг 2: Artemis bootstrap** (без акторов пока)

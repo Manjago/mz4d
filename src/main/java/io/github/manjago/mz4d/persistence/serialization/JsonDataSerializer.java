@@ -6,7 +6,7 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  * Сериализует класс в json и обратно.
- * Обертка надо jackson - не засоряем код try..catch
+ * Обертка над jackson - перевыбрасываем свои исключения
  */
 public class JsonDataSerializer {
     private final ObjectMapper mapper = new ObjectMapper();
