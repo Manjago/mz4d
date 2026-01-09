@@ -168,7 +168,8 @@ io.github.manjago.mz4d/
 ├── config/            - Конфигурация
 ├── persistence/       - MVStore, репозитории
 │   ├── MVStoreManager - работа с MVStore, транзакции
-│   └── repository/    - IncomingMessageRepository, etc
+│   ├── repository/    - IncomingMessageRepository, etc
+│   └── serialization/ - Сериализация (по факту - в json)
 ├── domain/            - Доменные модели
 │   └── message/       - IncomingMessage, DomainMessage, etc
 ├── actor/             - Акторы
