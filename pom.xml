@@ -26,6 +26,7 @@
         <h2.version>2.3.232</h2.version>
         <commons-rng.version>1.6</commons-rng.version>
         <jackson.version>3.0.3</jackson.version>
+        <java-uuid-generator.version>5.2.0</java-uuid-generator.version>
     </properties>
 
     <dependencies>
@@ -88,6 +89,12 @@
             <artifactId>annotations</artifactId>
             <version>26.0.2-1</version>
             <scope>compile</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.fasterxml.uuid/java-uuid-generator -->
+        <dependency>
+            <groupId>com.fasterxml.uuid</groupId>
+            <artifactId>java-uuid-generator</artifactId>
+            <version>${java-uuid-generator.version}</version>
         </dependency>
 
         <!-- Jackson -->

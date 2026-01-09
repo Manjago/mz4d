@@ -37,13 +37,13 @@ public class Mz4dEngine {
         }));
 
         final Mz4dConfig mz4dConfig = Mz4dConfig.defaults();
-        mvStoreManager = new MvStoreManager(mz4dConfig.mvstorePath(), mz4dConfig.mvstoreFileName()).init();
+        mvStoreManager = new MvStoreManager(mz4dConfig.mvstorePath(), mz4dConfig.mvstoreFileName());
         log.info("Initializing MVStore at: {}", mz4dConfig.mvstorePath());
 
         return true;
     }
 
     public void stop() {
-        mvStoreManager.stop();
+        mvStoreManager.close();
     }
 }

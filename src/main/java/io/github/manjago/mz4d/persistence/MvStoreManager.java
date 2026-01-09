@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class MvStoreManager {
+public class MvStoreManager implements AutoCloseable {
 
     private final Path storePath;
     private final String storeFileName;
@@ -21,9 +21,10 @@ public class MvStoreManager {
     public MvStoreManager(Path storePath, String storeFileName) {
         this.storePath = storePath;
         this.storeFileName = storeFileName;
+        init();
     }
 
-    public MvStoreManager init() {
+    private void init() {
         final Path fullPath = storePath.resolve(storeFileName);
         try {
             Files.createDirectories(storePath);
@@ -41,11 +42,10 @@ public class MvStoreManager {
         // 2. Инициализируем слой транзакций поверх него
         txStore = new TransactionStore(store);
         txStore.init();
-
-        return this;
     }
 
-    public void stop() {
+    @Override
+    public void close() {
         // Достаточно закрыть основной store, транзакционный слой закроется с ним
         if (store != null) {
             store.close();
