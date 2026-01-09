@@ -37,14 +37,12 @@ class ReceivedMessageIntegrationTest {
             final ReceivedMessage storedReceivedMessage = new ReceivedMessage(userId, text);
 
             // сохраняем
-            final Transaction tx1 = mvStoreManager.beginTransaction();
-            receivedMessageRepository.save(tx1, traceId, storedReceivedMessage);
-            tx1.commit();
+            mvStoreManager.runInTransaction(tx -> receivedMessageRepository.save(tx, traceId, storedReceivedMessage));
 
             // находим
-            final Transaction tx2 = mvStoreManager.beginTransaction();
-            final Optional<ReceivedMessage> loadedIncomingMessageOpt = receivedMessageRepository.findByTraceId(tx2, traceId);
-            tx2.commit();
+            final Optional<ReceivedMessage> loadedIncomingMessageOpt =
+                    mvStoreManager.runInTransactionWithResult(tx -> receivedMessageRepository.findByTraceId(tx,
+                            traceId));
 
             assertTrue(loadedIncomingMessageOpt.isPresent());
             final ReceivedMessage loadedReceivedMessage = loadedIncomingMessageOpt.get();
@@ -52,14 +50,12 @@ class ReceivedMessageIntegrationTest {
             assertEquals(text, loadedReceivedMessage.text());
 
             // удаляем
-            final Transaction tx3 = mvStoreManager.beginTransaction();
-            receivedMessageRepository.delete(tx3, traceId);
-            tx3.commit();
+            mvStoreManager.runInTransaction(tx -> receivedMessageRepository.delete(tx, traceId));
 
             //и потом не находим
-            final Transaction tx4 = mvStoreManager.beginTransaction();
-            final Optional<ReceivedMessage> loadedIncomingMessageOptNotFound = receivedMessageRepository.findByTraceId(tx4, traceId);
-            tx4.commit();
+            final Optional<ReceivedMessage> loadedIncomingMessageOptNotFound =
+                    mvStoreManager.runInTransactionWithResult(tx -> receivedMessageRepository.findByTraceId(tx,
+                            traceId));
 
             assertFalse(loadedIncomingMessageOptNotFound.isPresent());
 

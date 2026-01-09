@@ -8,6 +8,8 @@ import org.h2.mvstore.tx.TransactionStore;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class MvStoreManager implements AutoCloseable {
 
@@ -60,5 +62,29 @@ public class MvStoreManager implements AutoCloseable {
             throw new Mz4dPanicException("Store not initialized");
         }
         return txStore.begin();
+    }
+
+    public void runInTransaction(Consumer<Transaction> method) {
+        final Transaction transaction = beginTransaction();
+        try {
+            method.accept(transaction);
+        } catch (Exception e) {
+            transaction.rollback();
+            throw e;
+        }
+        transaction.commit();
+    }
+
+    public <R> R runInTransactionWithResult(Function<Transaction, R> method) {
+        final Transaction transaction = beginTransaction();
+        final R result;
+        try {
+            result = method.apply(transaction);
+        } catch (Exception e) {
+            transaction.rollback();
+            throw e;
+        }
+        transaction.commit();
+        return result;
     }
 }

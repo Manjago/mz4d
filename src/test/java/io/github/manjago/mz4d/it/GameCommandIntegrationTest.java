@@ -27,8 +27,7 @@ class GameCommandIntegrationTest {
             //given
 
             final JsonDataSerializer jsonDataSerializer = new JsonDataSerializer();
-            final GameCommandRepository gameCommandRepository =
-                    new GameCommandRepository(jsonDataSerializer);
+            final GameCommandRepository gameCommandRepository = new GameCommandRepository(jsonDataSerializer);
 
             final UUID traceId = Generators.timeBasedEpochGenerator().generate();
 
@@ -37,14 +36,11 @@ class GameCommandIntegrationTest {
             final GameCommand storedGameCommand = new GameCommand(userId, text);
 
             // сохраняем
-            final Transaction tx1 = mvStoreManager.beginTransaction();
-            gameCommandRepository.save(tx1, traceId, storedGameCommand);
-            tx1.commit();
+            mvStoreManager.runInTransaction(tx -> gameCommandRepository.save(tx, traceId, storedGameCommand));
 
             // находим
-            final Transaction tx2 = mvStoreManager.beginTransaction();
-            final Optional<GameCommand> loadedIncomingMessageOpt = gameCommandRepository.findByTraceId(tx2, traceId);
-            tx2.commit();
+            final Optional<GameCommand> loadedIncomingMessageOpt =
+                    mvStoreManager.runInTransactionWithResult(tx -> gameCommandRepository.findByTraceId(tx, traceId));
 
             assertTrue(loadedIncomingMessageOpt.isPresent());
             final GameCommand loadedGameCommand = loadedIncomingMessageOpt.get();
@@ -52,14 +48,11 @@ class GameCommandIntegrationTest {
             assertEquals(text, loadedGameCommand.text());
 
             // удаляем
-            final Transaction tx3 = mvStoreManager.beginTransaction();
-            gameCommandRepository.delete(tx3, traceId);
-            tx3.commit();
+            mvStoreManager.runInTransaction(tx -> gameCommandRepository.delete(tx, traceId));
 
             //и потом не находим
-            final Transaction tx4 = mvStoreManager.beginTransaction();
-            final Optional<GameCommand> loadedIncomingMessageOptNotFound = gameCommandRepository.findByTraceId(tx4, traceId);
-            tx4.commit();
+            final Optional<GameCommand> loadedIncomingMessageOptNotFound =
+                    mvStoreManager.runInTransactionWithResult(tx -> gameCommandRepository.findByTraceId(tx, traceId));
 
             assertFalse(loadedIncomingMessageOptNotFound.isPresent());
 
