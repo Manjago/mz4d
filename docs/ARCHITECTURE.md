@@ -208,7 +208,7 @@ io.github.manjago.mz4d/
 | `ReceivedMessage` | Получено от внешнего источника (Telegram/Console) |
 | `GameCommand`     | Команда для игрового движка                       |
 | `GameResponse`    | Ответ от игрового движка                          |
-| `OutgoingMessage` | готово к отправке наружу                          |
+| `OutgoingMessage` | Готово к отправке наружу                          |
 
 #### persistence.repository (сохранение)
 
