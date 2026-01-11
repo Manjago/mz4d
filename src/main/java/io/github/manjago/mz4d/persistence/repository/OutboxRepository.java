@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -82,6 +83,24 @@ public class OutboxRepository {
     public void delete(@NotNull Transaction tx, UUID traceId) {
         final TransactionMap<UUID, String> map = tx.openMap(MAP_NAME);
         map.remove(traceId);
+    }
+
+    public Stream<OutboxTask> findPending(Transaction tx) {
+        return findAll(tx);
+    }
+
+    public int cleanupExpired(Transaction tx, Instant now) {
+        // Собираем ID для удаления (не модифицируем во время итерации)
+        final List<UUID> toDelete = findAll(tx)
+                .filter(task -> task.meta().expiresAt() != null)
+                .filter(task -> task.meta().expiresAt().isBefore(now))
+                .map(OutboxTask::traceId)
+                .toList();
+
+        // Удаляем
+        toDelete.forEach(id -> delete(tx, id));
+
+        return toDelete.size();
     }
 
 }

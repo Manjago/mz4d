@@ -2,6 +2,7 @@ package io.github.manjago.mz4d.it;
 
 import com.fasterxml.uuid.Generators;
 import io.github.manjago.mz4d.config.Mz4dConfig;
+import io.github.manjago.mz4d.domain.message.OutgoingMessage;
 import io.github.manjago.mz4d.domain.message.ReceivedMessage;
 import io.github.manjago.mz4d.domain.outbox.OutboxMessageType;
 import io.github.manjago.mz4d.domain.outbox.OutboxTask;
@@ -12,33 +13,39 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OutboxRepositoryIntegrationTest {
 
-    final JsonDataSerializer jsonDataSerializer = new JsonDataSerializer();
-    final long userId = 123L;
-    final String text = "Hi!";
+    private final JsonDataSerializer jsonDataSerializer = new JsonDataSerializer();
+    private static final long USER_ID = 123L;
+    private static final String TEXT = "Hi!";
 
     @Test
     void storeAndLoad(@TempDir Path tempDir){
+
+        final OutboxRepository repository =
+                new OutboxRepository(jsonDataSerializer, Mz4dConfig.defaults());
+
         try (MvStoreManager mvStoreManager = new MvStoreManager(tempDir, "test.mv")) {
 
             //given
 
-            final OutboxRepository repository =
-                    new OutboxRepository(jsonDataSerializer, Mz4dConfig.defaults());
-
             final UUID traceId = Generators.timeBasedEpochGenerator().generate();
 
-            final ReceivedMessage storedReceivedMessage = new ReceivedMessage(userId, text);
+            final ReceivedMessage storedReceivedMessage = new ReceivedMessage(USER_ID, TEXT);
 
             // сохраняем
             mvStoreManager.runInTransaction(tx -> repository.schedule(tx, storedReceivedMessage, traceId));
@@ -71,12 +78,51 @@ class OutboxRepositoryIntegrationTest {
         }
     }
 
+    @Test
+    void cleanupExpired(@TempDir Path tempDir) throws IOException {
+
+        final String customConfigContent = """
+                mz4d {
+                  outbox {
+                    ttl-days = 1
+                  }
+                }
+                """;
+        final Path customConfigFile = tempDir.resolve("custom.conf");
+        Files.writeString(customConfigFile, customConfigContent);
+
+        final OutboxRepository repository =
+                new OutboxRepository(jsonDataSerializer, Mz4dConfig.fromFile(customConfigFile));
+
+        try (MvStoreManager mvStoreManager = new MvStoreManager(tempDir, "test.mv")) {
+            final UUID traceId = Generators.timeBasedEpochGenerator().generate();
+
+            final OutgoingMessage storedOutgoingMessage = new OutgoingMessage(USER_ID, TEXT);
+
+            // сохраняем
+            mvStoreManager.runInTransaction(tx -> repository.schedule(tx, storedOutgoingMessage, traceId));
+
+            // находим
+            final Optional<OutboxTask> storedOutboxTaskOpt = mvStoreManager.runInTransactionWithResult(tx -> repository.findById(tx, traceId));
+            assertTrue(storedOutboxTaskOpt.isPresent());
+
+            // удаляем, он просрочен уже
+            final int deleted = mvStoreManager.runInTransactionWithResult(tx -> repository.cleanupExpired(tx, Instant.now().plus(2, ChronoUnit.DAYS)));
+            assertEquals(1, deleted);
+
+            // не находим
+            final Optional<OutboxTask> notExistedStoredOutboxTaskOpt = mvStoreManager.runInTransactionWithResult(tx -> repository.findById(tx, traceId));
+            assertFalse(notExistedStoredOutboxTaskOpt.isPresent());
+        }
+
+    }
+
     private <T> T extractPayload(@NotNull OutboxTask task) {
         final Class<?> clazz = task.type().getTargetClass();
         return (T) jsonDataSerializer.deserialize(task.payloadJson(), clazz);
     }
 
-    private OutboxTask check(UUID traceId, int retryCount,  Optional<OutboxTask> storedOutboxTaskOpt) {
+    private @NotNull OutboxTask check(UUID traceId, int retryCount,  Optional<OutboxTask> storedOutboxTaskOpt) {
         assertNotNull(storedOutboxTaskOpt);
         assertTrue(storedOutboxTaskOpt.isPresent());
         final OutboxTask outboxTask = storedOutboxTaskOpt.get();
@@ -88,8 +134,8 @@ class OutboxRepositoryIntegrationTest {
         assertNotNull(outboxTask.payloadJson());
 
         final ReceivedMessage loadedReceivedMessage = extractPayload(outboxTask);
-        assertEquals(userId, loadedReceivedMessage.userId());
-        assertEquals(text, loadedReceivedMessage.text());
+        assertEquals(USER_ID, loadedReceivedMessage.userId());
+        assertEquals(TEXT, loadedReceivedMessage.text());
         return outboxTask;
     }
 }
