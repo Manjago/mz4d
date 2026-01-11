@@ -6,7 +6,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 
-public record Mz4dConfig(Path mvstorePath, String mvstoreFileName, Path artemisPath) {
+public record Mz4dConfig(
+        Path mvstorePath,
+        String mvstoreFileName,
+        Path artemisPath,
+        int outBoxMaxRetries,
+        int outBoxTttlDays
+) {
 
     /**
      * Load default configuration.
@@ -18,8 +24,16 @@ public record Mz4dConfig(Path mvstorePath, String mvstoreFileName, Path artemisP
     private static @NotNull Mz4dConfig fromConfig(@NotNull Config config) {
         final Config c = config.getConfig("mz4d");
 
-        return new Mz4dConfig(Path.of(c.getString("mvstore.path")), c.getString("mvstore.file"), Path.of(c.getString(
-                "artemis.path")));
+        // @formatter:off
+        return new Mz4dConfig(
+                Path.of(c.getString("mvstore.path")),
+                c.getString("mvstore.file"),
+                Path.of(c.getString("artemis.path")),
+                c.getInt("outbox.max-retries"),
+                c.getInt("outbox.ttl-days")
+        );
+        // @formatter:on
+
     }
 
 }
