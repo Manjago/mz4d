@@ -63,7 +63,7 @@ class OutboxRepositoryIntegrationTest {
             check(traceId, 1, storedOutboxTaskOpt2);
 
             // найдем все
-            final List<OutboxTask> list = mvStoreManager.runInTransactionWithResult(repository::findAll).toList();
+            final List<OutboxTask> list = mvStoreManager.runInTransactionWithResult(repository::findPending).toList();
             assertNotNull(list);
             assertEquals(1, list.size());
             check(traceId,  1, Optional.of(list.getFirst()));
