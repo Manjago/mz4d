@@ -11,7 +11,7 @@ public record Mz4dConfig(
         String mvstoreFileName,
         Path artemisPath,
         int outBoxMaxRetries,
-        int outBoxTttlDays
+        int outBoxTtlDays
 ) {
 
     /**
@@ -19,6 +19,12 @@ public record Mz4dConfig(
      */
     public static @NotNull Mz4dConfig defaults() {
         return fromConfig(ConfigFactory.load());
+    }
+
+    public static @NotNull Mz4dConfig fromFile(@NotNull Path configFile) {
+        final Config fileConfig = ConfigFactory.parseFile(configFile.toFile());
+        final Config merged = fileConfig.withFallback(ConfigFactory.load());
+        return fromConfig(merged);
     }
 
     private static @NotNull Mz4dConfig fromConfig(@NotNull Config config) {

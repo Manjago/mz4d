@@ -1,6 +1,7 @@
 package io.github.manjago.mz4d.it;
 
 import com.fasterxml.uuid.Generators;
+import io.github.manjago.mz4d.config.Mz4dConfig;
 import io.github.manjago.mz4d.domain.message.ReceivedMessage;
 import io.github.manjago.mz4d.domain.outbox.OutboxMessageType;
 import io.github.manjago.mz4d.domain.outbox.OutboxTask;
@@ -18,7 +19,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OutboxRepositoryIntegrationTest {
@@ -34,7 +34,7 @@ class OutboxRepositoryIntegrationTest {
             //given
 
             final OutboxRepository repository =
-                    new OutboxRepository(jsonDataSerializer);
+                    new OutboxRepository(jsonDataSerializer, Mz4dConfig.defaults());
 
             final UUID traceId = Generators.timeBasedEpochGenerator().generate();
 
@@ -83,7 +83,7 @@ class OutboxRepositoryIntegrationTest {
         assertEquals(traceId, outboxTask.traceId());
         assertEquals(retryCount, outboxTask.meta().retryCount());
         assertNotNull(outboxTask.meta().createdAt());
-        assertNull(outboxTask.meta().expiresAt());
+        assertNotNull(outboxTask.meta().expiresAt());
         assertEquals(OutboxMessageType.EXTERNAL_IN, outboxTask.type());
         assertNotNull(outboxTask.payloadJson());
 

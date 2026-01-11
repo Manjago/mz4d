@@ -5,6 +5,7 @@ import io.github.manjago.mz4d.persistence.MvStoreManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Mz4dEngine {
@@ -36,7 +37,7 @@ public class Mz4dEngine {
             }
         }));
 
-        final Mz4dConfig mz4dConfig = Mz4dConfig.defaults();
+        final Mz4dConfig mz4dConfig = Mz4dConfig.fromFile(Path.of("config/application.conf"));
         mvStoreManager = new MvStoreManager(mz4dConfig.mvstorePath(), mz4dConfig.mvstoreFileName());
         log.info("Initializing MVStore at: {}", mz4dConfig.mvstorePath());
 

@@ -1,5 +1,6 @@
 package io.github.manjago.mz4d.persistence.repository;
 
+import io.github.manjago.mz4d.config.Mz4dConfig;
 import io.github.manjago.mz4d.domain.outbox.OutBoxMetaData;
 import io.github.manjago.mz4d.domain.outbox.OutboxMessageType;
 import io.github.manjago.mz4d.domain.outbox.OutboxTask;
@@ -9,6 +10,7 @@ import org.h2.mvstore.tx.TransactionMap;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Spliterator;
@@ -21,9 +23,11 @@ public class OutboxRepository {
 
     private static final String MAP_NAME = "transaction_outbox";
     private final JsonDataSerializer serializer;
+    private final Mz4dConfig config;
 
-    public OutboxRepository(JsonDataSerializer serializer) {
+    public OutboxRepository(JsonDataSerializer serializer, Mz4dConfig config) {
         this.serializer = serializer;
+        this.config = config;
     }
 
     // Метод сохранения ЛЮБОГО сообщения
@@ -34,7 +38,8 @@ public class OutboxRepository {
         // Определяем тип через наш реестр
         final OutboxMessageType type = OutboxMessageType.fromClass(payload.getClass());
 
-        final OutBoxMetaData meta = new OutBoxMetaData(0, Instant.now(), null);
+        final Instant now = Instant.now();
+        final OutBoxMetaData meta = new OutBoxMetaData(0, now, now.plus(config.outBoxTtlDays(), ChronoUnit.DAYS));
 
         // Сохраняем Enum
         final OutboxTask task = new OutboxTask(traceId, meta, type, payloadJson);
