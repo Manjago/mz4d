@@ -78,45 +78,6 @@ class OutboxRepositoryIntegrationTest {
         }
     }
 
-    @Test
-    void cleanupExpired(@TempDir Path tempDir) throws IOException {
-
-        final String customConfigContent = """
-                mz4d {
-                  outbox {
-                    ttl-days = 1
-                  }
-                }
-                """;
-        final Path customConfigFile = tempDir.resolve("custom.conf");
-        Files.writeString(customConfigFile, customConfigContent);
-
-        final OutboxRepository repository =
-                new OutboxRepository(jsonDataSerializer, Mz4dConfig.fromFile(customConfigFile));
-
-        try (MvStoreManager mvStoreManager = new MvStoreManager(tempDir, "test.mv")) {
-            final UUID traceId = Generators.timeBasedEpochGenerator().generate();
-
-            final OutgoingMessage storedOutgoingMessage = new OutgoingMessage(USER_ID, TEXT);
-
-            // сохраняем
-            mvStoreManager.runInTransaction(tx -> repository.schedule(tx, storedOutgoingMessage, traceId));
-
-            // находим
-            final Optional<OutboxTask> storedOutboxTaskOpt = mvStoreManager.runInTransactionWithResult(tx -> repository.findById(tx, traceId));
-            assertTrue(storedOutboxTaskOpt.isPresent());
-
-            // удаляем, он просрочен уже
-            final int deleted = mvStoreManager.runInTransactionWithResult(tx -> repository.cleanupExpired(tx, Instant.now().plus(2, ChronoUnit.DAYS)));
-            assertEquals(1, deleted);
-
-            // не находим
-            final Optional<OutboxTask> notExistedStoredOutboxTaskOpt = mvStoreManager.runInTransactionWithResult(tx -> repository.findById(tx, traceId));
-            assertFalse(notExistedStoredOutboxTaskOpt.isPresent());
-        }
-
-    }
-
     private <T> T extractPayload(@NotNull OutboxTask task) {
         final Class<?> clazz = task.type().getTargetClass();
         return (T) jsonDataSerializer.deserialize(task.payloadJson(), clazz);

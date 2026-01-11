@@ -40,7 +40,7 @@ public class OutboxRepository {
         final OutboxMessageType type = OutboxMessageType.fromClass(payload.getClass());
 
         final Instant now = Instant.now();
-        final OutBoxMetaData meta = new OutBoxMetaData(0, now, now.plus(config.outBoxTtlDays(), ChronoUnit.DAYS));
+        final OutBoxMetaData meta = new OutBoxMetaData(0, now, now.plus(config.deduplicationTtlDays(), ChronoUnit.DAYS));
 
         // Сохраняем Enum
         final OutboxTask task = new OutboxTask(traceId, meta, type, payloadJson);

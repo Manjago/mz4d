@@ -11,7 +11,7 @@ public record Mz4dConfig(
         String mvstoreFileName,
         Path artemisPath,
         int outBoxMaxRetries,
-        int outBoxTtlDays
+        int deduplicationTtlDays
 ) {
 
     /**
@@ -36,7 +36,7 @@ public record Mz4dConfig(
                 c.getString("mvstore.file"),
                 Path.of(c.getString("artemis.path")),
                 c.getInt("outbox.max-retries"),
-                c.getInt("outbox.ttl-days")
+                c.getInt("deduplication.ttl-days")
         );
         // @formatter:on
 

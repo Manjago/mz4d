@@ -19,7 +19,7 @@ class Mz4dConfigTest {
         assertEquals("game.mv.db", config.mvstoreFileName());
         assertEquals("data/artemis", config.artemisPath().toString());
         assertEquals(5, config.outBoxMaxRetries());
-        assertEquals(3, config.outBoxTtlDays());
+        assertEquals(30, config.deduplicationTtlDays());
     }
 
     @Test
@@ -49,6 +49,6 @@ class Mz4dConfigTest {
                 "Если в файле нет значения, должно браться дефолтное");
         assertEquals("data/artemis", config.artemisPath().toString(),
                 "Если в файле нет значения, должно браться дефолтное");
-        assertEquals(3, config.outBoxTtlDays());
+        assertEquals(30, config.deduplicationTtlDays());
     }
 }
