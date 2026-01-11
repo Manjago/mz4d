@@ -8,15 +8,13 @@ import java.time.Instant;
  * Метаданные для Transaction Outbox
  * @param retryCount сколько раз пытались отправить
  * @param createdAt когда создана
- * @param expiresAt для TTL cleanup
  */
 public record OutBoxMetaData(
         int retryCount,        // сколько раз пытались отправить
-        Instant createdAt,
-        Instant expiresAt      // для TTL cleanup
+        Instant createdAt
 ) {
     public @NotNull OutBoxMetaData incRetryCount() {
-        return new OutBoxMetaData(retryCount + 1, createdAt, expiresAt);
+        return new OutBoxMetaData(retryCount + 1, createdAt);
     }
 
 }

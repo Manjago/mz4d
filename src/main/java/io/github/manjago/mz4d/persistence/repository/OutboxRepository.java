@@ -40,7 +40,7 @@ public class OutboxRepository {
         final OutboxMessageType type = OutboxMessageType.fromClass(payload.getClass());
 
         final Instant now = Instant.now();
-        final OutBoxMetaData meta = new OutBoxMetaData(0, now, now.plus(config.deduplicationTtlDays(), ChronoUnit.DAYS));
+        final OutBoxMetaData meta = new OutBoxMetaData(0, now);
 
         // Сохраняем Enum
         final OutboxTask task = new OutboxTask(traceId, meta, type, payloadJson);
@@ -88,19 +88,4 @@ public class OutboxRepository {
     public Stream<OutboxTask> findPending(Transaction tx) {
         return findAll(tx);
     }
-
-    public int cleanupExpired(Transaction tx, Instant now) {
-        // Собираем ID для удаления (не модифицируем во время итерации)
-        final List<UUID> toDelete = findAll(tx)
-                .filter(task -> task.meta().expiresAt() != null)
-                .filter(task -> task.meta().expiresAt().isBefore(now))
-                .map(OutboxTask::traceId)
-                .toList();
-
-        // Удаляем
-        toDelete.forEach(id -> delete(tx, id));
-
-        return toDelete.size();
-    }
-
 }
