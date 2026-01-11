@@ -34,7 +34,7 @@ public class OutboxRepository {
         // Определяем тип через наш реестр
         final OutboxMessageType type = OutboxMessageType.fromClass(payload.getClass());
 
-        final OutBoxMetaData meta = new OutBoxMetaData(0, Instant.now(), null, null);
+        final OutBoxMetaData meta = new OutBoxMetaData(0, Instant.now(), null);
 
         // Сохраняем Enum
         final OutboxTask task = new OutboxTask(traceId, meta, type, payloadJson);

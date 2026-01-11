@@ -83,7 +83,6 @@ class OutboxRepositoryIntegrationTest {
         assertEquals(traceId, outboxTask.traceId());
         assertEquals(retryCount, outboxTask.meta().retryCount());
         assertNotNull(outboxTask.meta().createdAt());
-        assertNull(outboxTask.meta().sentAt());
         assertNull(outboxTask.meta().expiresAt());
         assertEquals(OutboxMessageType.EXTERNAL_IN, outboxTask.type());
         assertNotNull(outboxTask.payloadJson());

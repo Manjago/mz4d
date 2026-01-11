@@ -24,7 +24,6 @@ public class OutBoxWorkerProofOfConcept {
     public void loopForSend() {
         mvStoreManager.runInTransaction(tx -> {
             outboxRepository.findAll(tx)
-                    .filter(task -> task.meta().sentAt() == null) // берем не отправленные
                     .forEach(task -> {
                         // Распаковываем
                         Object payload = extractPayload(task);
