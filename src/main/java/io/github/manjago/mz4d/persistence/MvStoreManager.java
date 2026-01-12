@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class MvStoreManager implements AutoCloseable {
 
@@ -85,6 +86,23 @@ public class MvStoreManager implements AutoCloseable {
             throw e;
         }
         transaction.commit();
+        return result;
+    }
+
+    public <R> R runInTransactionWithResult(Function<Transaction, R> method, Predicate<R> needCommit) {
+        final Transaction transaction = beginTransaction();
+        final R result;
+        try {
+            result = method.apply(transaction);
+        } catch (Exception e) {
+            transaction.rollback();
+            throw e;
+        }
+        if (needCommit.test(result)) {
+            transaction.commit();
+        } else {
+            transaction.rollback();
+        }
         return result;
     }
 }
