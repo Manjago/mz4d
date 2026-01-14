@@ -1,13 +1,17 @@
 package io.github.manjago.mz4d.persistence.repository;
 
 import io.github.manjago.mz4d.persistence.MvStoreManager;
+import org.h2.mvstore.WriteBuffer;
 import org.h2.mvstore.tx.TransactionMap;
+import org.h2.mvstore.type.BasicDataType;
+import org.h2.mvstore.type.DataType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.Objects;
@@ -148,4 +152,40 @@ public class DeduplicationRepository {
         }
     }
 
+    static class ExpirationKeyType extends BasicDataType<ExpirationKey> {
+
+        @Override
+        public int compare(ExpirationKey a, ExpirationKey b) {
+            return a.compareTo(b);
+        }
+
+        @Override
+        public int getMemory(ExpirationKey obj) {
+            // 8 (timestamp) + 16 (UUID) = 24 байта данных + оверхед объекта
+            return 40;
+        }
+
+        // Запись ОДНОГО объекта
+        @Override
+        public void write(WriteBuffer buff, ExpirationKey obj) {
+            buff.putLong(obj.timestamp);
+            buff.putLong(obj.uuid.getMostSignificantBits());
+            buff.putLong(obj.uuid.getLeastSignificantBits());
+        }
+
+        // Чтение ОДНОГО объекта
+        @Override
+        public ExpirationKey read(ByteBuffer buff) {
+            long timestamp = buff.getLong();
+            long mostSigBits = buff.getLong();
+            long leastSigBits = buff.getLong();
+            return new ExpirationKey(timestamp, new UUID(mostSigBits, leastSigBits));
+        }
+
+        // Создание массива для хранения (из DataType interface)
+        @Override
+        public ExpirationKey[] createStorage(int size) {
+            return new ExpirationKey[size];
+        }
+    }
 }
